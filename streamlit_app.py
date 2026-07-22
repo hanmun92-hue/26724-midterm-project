@@ -5,14 +5,27 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+def set_input_mode_paste():
+    st.session_state.data_input_mode = "paste"
+
+
+def set_input_mode_upload():
+    st.session_state.data_input_mode = "upload"
+
+
+if "data_input_mode" not in st.session_state:
+    st.session_state.data_input_mode = "paste"
+
+
 st.title("건의문 자료 검증·시각화 도우미")
 
 # 데이터 만드는 방법 안내 (접었다 펼 수 있는 상자)
 with st.expander("📋 어떤 데이터를 준비해야 하나요? (누르면 펼쳐져요)"):
     st.markdown("""
-    ### 1. 데이터 입력: 붙여넣기 또는 업로드
+    ### 1. 데이터 입력 방식
 
-    스프레드시트에서 복사한 데이터를 붙여넣거나, CSV/Excel 파일을 업로드해서 데이터를 입력할 수 있어요.
+    - `데이터 붙여넣기` 탭에서는 스프레드시트에서 복사한 데이터를 붙여넣을 수 있어요.
+    - `CSV/Excel 업로드` 탭에서는 CSV 또는 Excel(.xlsx) 파일을 업로드해서 데이터를 입력할 수 있어요.
 
     ### 2. 데이터 종류에 따라 양식이 달라요
 
@@ -58,28 +71,25 @@ tab1, tab2 = st.tabs(["데이터 붙여넣기", "CSV/Excel 업로드"])
 with tab1:
     pasted_data = st.text_area(
         "관련 데이터 붙여넣기",
-        placeholder="스프레드시트에서 복사한 데이터를 여기에 붙여넣어 주세요. 열 헤더가 포함되어야 합니다."
+        key="pasted_data",
+        placeholder="스프레드시트에서 복사한 데이터를 여기에 붙여넣어 주세요. 열 헤더가 포함되어야 합니다.",
+        on_change=set_input_mode_paste
     )
 
 with tab2:
     uploaded_file = st.file_uploader(
         "CSV 또는 Excel 파일 업로드",
-        type=["csv", "xlsx"]
+        type=["csv", "xlsx"],
+        key="uploaded_file",
+        on_change=set_input_mode_upload
     )
 
 
 df = None
 parse_error = None
-if pasted_data:
-    try:
-        df = pd.read_csv(io.StringIO(pasted_data), sep=None, engine='python')
-    except Exception:
-        try:
-            df = pd.read_csv(io.StringIO(pasted_data))
-        except Exception:
-            parse_error = "데이터를 읽는 데 실패했습니다. 스프레드시트에서 복사한 내용을 다시 확인해 주세요."
-            df = None
-elif uploaded_file is not None:
+current_mode = st.session_state.data_input_mode
+if current_mode == "upload" and st.session_state.get("uploaded_file") is not None:
+    uploaded_file = st.session_state.uploaded_file
     try:
         if uploaded_file.name.lower().endswith(".csv"):
             encodings = ["utf-8", "cp949", "euc-kr"]
@@ -96,6 +106,16 @@ elif uploaded_file is not None:
             df = pd.read_excel(uploaded_file)
     except Exception:
         parse_error = "파일을 읽는 데 실패했습니다. 업로드한 파일을 확인해 주세요."
+elif current_mode == "paste" and st.session_state.get("pasted_data"):
+    pasted_data = st.session_state.pasted_data
+    try:
+        df = pd.read_csv(io.StringIO(pasted_data), sep=None, engine='python')
+    except Exception:
+        try:
+            df = pd.read_csv(io.StringIO(pasted_data))
+        except Exception:
+            parse_error = "데이터를 읽는 데 실패했습니다. 스프레드시트에서 복사한 내용을 다시 확인해 주세요."
+            df = None
 
 if df is not None:
     st.dataframe(df)
