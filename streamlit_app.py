@@ -85,6 +85,7 @@ if uploaded:
                         ax.set_ylabel('Value')
                         ax.set_title(f"{country} - 시계열")
                         st.pyplot(fig)
+                        st.info("💡 이 그래프는 건의문 개요의 **'중간 - 문제 상황과 해결 방안'** 칸에서 근거 자료로 활용하세요!")
                 else:
                     st.warning("선택한 국가의 데이터가 없습니다.")
         else:
@@ -120,5 +121,8 @@ if uploaded:
 # 3단계: 건의문 개요 틀
 st.subheader("건의문 개요 작성")
 st.text_input("처음 - 건의 동기와 배경")
-st.text_area("중간 - 문제 상황과 해결 방안")
+st.text_area(
+    "중간 - 문제 상황과 해결 방안",
+    placeholder="예) 위 그래프에서 확인한 것처럼 ○○ 항목이 가장 높게(또는 낮게) 나타났습니다. 이는 △△ 때문으로 보이며, 이를 해결하기 위해 □□를 제안합니다."
+)
 st.text_input("끝 - 요약 및 강조")
