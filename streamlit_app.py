@@ -10,11 +10,24 @@ problem = st.text_area("어떤 문제 상황을 건의하고 싶나요?")
 # 2단계: 자료 업로드 및 시각화
 uploaded = st.file_uploader("관련 데이터(csv) 업로드", type="csv")
 if uploaded:
-    df = pd.read_csv(uploaded)
-    st.dataframe(df)
-    fig, ax = plt.subplots()
-    df.plot(ax=ax)  # 학생 데이터 구조에 맞게 조정
-    st.pyplot(fig)
+    # 여러 인코딩 방식을 순서대로 시도
+    encodings = ["utf-8", "cp949", "euc-kr"]
+    df = None
+    for enc in encodings:
+        try:
+            uploaded.seek(0)  # 파일 읽기 위치를 처음으로 되돌리기
+            df = pd.read_csv(uploaded, encoding=enc)
+            break  # 성공하면 반복 멈추기
+        except UnicodeDecodeError:
+            continue  # 실패하면 다음 인코딩으로 시도
+
+    if df is not None:
+        st.dataframe(df)
+        fig, ax = plt.subplots()
+        df.plot(ax=ax)
+        st.pyplot(fig)
+    else:
+        st.error("파일을 읽을 수 없어요. CSV 파일이 손상되지 않았는지 확인해 주세요.")
 
     # 교과서 타당성·신뢰성 평가 기준을 그대로 체크리스트로
     st.subheader("자료 검증하기 (타당성·신뢰성 평가)")
