@@ -10,9 +10,9 @@ st.title("건의문 자료 검증·시각화 도우미")
 # 데이터 만드는 방법 안내 (접었다 펼 수 있는 상자)
 with st.expander("📋 어떤 데이터를 준비해야 하나요? (누르면 펼쳐져요)"):
     st.markdown("""
-    ### 1. 파일 형식: CSV 파일만 올릴 수 있어요
+    ### 1. 데이터 입력: 스프레드시트 복사·붙여넣기
 
-    엑셀에서 작업했다면 **"다른 이름으로 저장" → "CSV UTF-8(쉼표로 분리)"** 를 선택해 저장해 주세요.
+    스프레드시트에서 복사한 데이터를 아래 붙여넣기 칸에 넣어 주세요. 열 헤더가 포함되어야 합니다.
 
     ### 2. 데이터 종류에 따라 양식이 달라요
 
@@ -57,6 +57,8 @@ pasted_data = st.text_area(
     "관련 데이터 붙여넣기",
     placeholder="스프레드시트에서 복사한 데이터를 여기에 붙여넣어 주세요. 열 헤더가 포함되어야 합니다."
 )
+
+df = None
 if pasted_data:
     try:
         df = pd.read_csv(io.StringIO(pasted_data), sep=None, engine='python')
@@ -67,58 +69,41 @@ if pasted_data:
             st.error("데이터를 읽는 데 실패했습니다. 스프레드시트에서 복사한 내용을 다시 확인해 주세요.")
             df = None
 
-    if df is not None:
-        st.dataframe(df)
+if df is not None:
+    st.dataframe(df)
 
-        # 연도형 열(예: '1960','1961',...)을 찾아 시계열로 표시할 수 있으면 국가 선택 UI 제공
-        year_cols = [c for c in df.columns if re.match(r"^\d{4}$", str(c))]
-        if 'Country Name' in df.columns and year_cols:
-            country = st.selectbox("국가 선택", df['Country Name'].dropna().unique())
-            if country:
-                row = df[df['Country Name'] == country]
-                if not row.empty:
-                    series = row.iloc[0][year_cols].replace('', pd.NA).apply(pd.to_numeric, errors='coerce')
-                    if series.dropna().empty:
-                        st.warning("선택한 국가에 시계열로 표시할 수 있는 수치 데이터가 없습니다.")
-                    else:
-                        fig, ax = plt.subplots()
-                        series.plot(ax=ax)
-                        ax.set_xlabel('Year')
-                        ax.set_ylabel('Value')
-                        ax.set_title(f"{country} - 시계열")
-                        st.pyplot(fig)
-                        st.info("💡 이 그래프는 건의문 개요의 **'중간 - 문제 상황과 해결 방안'** 칸에서 근거 자료로 활용하세요!")
-                else:
-                    st.warning("선택한 국가의 데이터가 없습니다.")
-        else:
-            # 숫자형 열만 골라서 선택 목록 만들기
-            numeric_columns = df.select_dtypes(include="number").columns.tolist()
-            if not numeric_columns:
-                # 변환 시도
-                coerced = df.apply(lambda col: pd.to_numeric(col, errors='coerce'))
-                numeric_columns = coerced.select_dtypes(include='number').columns.tolist()
+    numeric_columns = df.select_dtypes(include="number").columns.tolist()
 
-            if numeric_columns:
-                selected_column = st.selectbox(
-                    "그래프로 보고 싶은 항목을 선택하세요",
-                    numeric_columns
-                )
-                fig, ax = plt.subplots()
-                # 만약 선택된 열이 전체 데이터의 시리즈라면 그대로 플롯
-                try:
-                    df[selected_column].plot(ax=ax, kind="line")
-                except Exception:
-                    coerced[selected_column].plot(ax=ax, kind="line")
-                ax.set_ylabel(selected_column)
-                st.pyplot(fig)
-            else:
-                st.warning("숫자로 된 데이터가 없어서 그래프를 그릴 수 없어요.")
+    if numeric_columns:
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_column = st.selectbox(
+                "그래프로 보고 싶은 항목을 선택하세요",
+                numeric_columns
+            )
+        with col2:
+            chart_type = st.selectbox(
+                "그래프 종류를 선택하세요",
+                ["막대그래프", "선그래프", "원그래프"]
+            )
 
-        # 교과서 타당성·신뢰성 평가 체크리스트
-        st.subheader("자료 검증하기 (타당성·신뢰성 평가)")
-        st.checkbox("이 자료의 출처가 명확한가요?")
-        st.checkbox("이 자료가 문제 상황을 논리적으로 뒷받침하나요?")
-        st.checkbox("표현이나 그래프에 과장·왜곡은 없나요?")
+        fig, ax = plt.subplots()
+
+        if chart_type == "막대그래프":
+            df[selected_column].plot(ax=ax, kind="bar")
+        elif chart_type == "선그래프":
+            df[selected_column].plot(ax=ax, kind="line")
+        elif chart_type == "원그래프":
+            df[selected_column].value_counts().plot(ax=ax, kind="pie", autopct="%1.1f%%")
+
+        ax.set_ylabel(selected_column)
+        st.pyplot(fig)
+        st.info("💡 이 그래프는 건의문 개요의 **'중간 - 문제 상황과 해결 방안'** 칸에서 근거 자료로 활용하세요!")
+    else:
+        st.warning("숫자로 된 데이터가 없어서 그래프를 그릴 수 없어요.")
+else:
+    if pasted_data:
+        st.error("데이터를 확인할 수 없어요. 붙여넣은 내용을 다시 확인해 주세요.")
 
 # 3단계: 건의문 개요 틀
 st.subheader("건의문 개요 작성")
