@@ -85,7 +85,7 @@ if df is not None:
         with col2:
             chart_type = st.selectbox(
                 "그래프 종류를 선택하세요",
-                ["막대그래프", "선그래프", "원그래프"]
+                ["막대그래프", "선그래프", "꺽은선그래프", "원그래프", "면적그래프", "히스토그램", "박스그래프"]
             )
 
         if selected_columns:
@@ -95,13 +95,21 @@ if df is not None:
                 df[selected_columns].plot(ax=ax, kind="bar")
             elif chart_type == "선그래프":
                 df[selected_columns].plot(ax=ax, kind="line")
+            elif chart_type == "꺽은선그래프":
+                df[selected_columns].plot(ax=ax, kind="line", marker='o')
+            elif chart_type == "면적그래프":
+                df[selected_columns].plot(ax=ax, kind="area")
+            elif chart_type == "히스토그램":
+                df[selected_columns].plot(ax=ax, kind="hist", alpha=0.6, bins=10)
+            elif chart_type == "박스그래프":
+                df[selected_columns].plot(ax=ax, kind="box")
             elif chart_type == "원그래프":
                 if len(selected_columns) == 1:
                     df[selected_columns[0]].value_counts().plot(ax=ax, kind="pie", autopct="%1.1f%%")
                 else:
                     df[selected_columns].sum().plot(ax=ax, kind="pie", autopct="%1.1f%%")
 
-            if chart_type != "원그래프":
+            if chart_type not in ["원그래프"]:
                 ax.set_ylabel(", ".join(selected_columns))
             st.pyplot(fig)
             st.info("💡 이 그래프는 건의문 개요의 **'중간 - 문제 상황과 해결 방안'** 칸에서 근거 자료로 활용하세요!")
