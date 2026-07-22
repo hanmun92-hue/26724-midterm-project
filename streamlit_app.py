@@ -89,7 +89,9 @@ df = None
 parse_error = None
 uploaded_file = st.session_state.get("uploaded_file")
 pasted_data = st.session_state.get("pasted_data")
+source = None
 if uploaded_file is not None:
+    source = "업로드"
     try:
         if uploaded_file.name.lower().endswith(".csv"):
             encodings = ["utf-8", "cp949", "euc-kr"]
@@ -107,6 +109,7 @@ if uploaded_file is not None:
     except Exception:
         parse_error = "파일을 읽는 데 실패했습니다. 업로드한 파일을 확인해 주세요."
 elif pasted_data:
+    source = "붙여넣기"
     try:
         df = pd.read_csv(io.StringIO(pasted_data), sep=None, engine='python')
     except Exception:
@@ -117,6 +120,7 @@ elif pasted_data:
             df = None
 
 if df is not None:
+    st.info(f"현재 데이터 소스: {source}")
     st.dataframe(df)
 
     numeric_columns = df.select_dtypes(include="number").columns.tolist()
