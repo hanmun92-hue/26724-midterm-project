@@ -77,9 +77,10 @@ if df is not None:
     if numeric_columns:
         col1, col2 = st.columns(2)
         with col1:
-            selected_column = st.selectbox(
-                "그래프로 보고 싶은 항목을 선택하세요",
-                numeric_columns
+            selected_columns = st.multiselect(
+                "그래프로 보고 싶은 항목을 선택하세요 (여러 개 선택 가능)",
+                numeric_columns,
+                default=[numeric_columns[0]]
             )
         with col2:
             chart_type = st.selectbox(
@@ -87,18 +88,25 @@ if df is not None:
                 ["막대그래프", "선그래프", "원그래프"]
             )
 
-        fig, ax = plt.subplots()
+        if selected_columns:
+            fig, ax = plt.subplots()
 
-        if chart_type == "막대그래프":
-            df[selected_column].plot(ax=ax, kind="bar")
-        elif chart_type == "선그래프":
-            df[selected_column].plot(ax=ax, kind="line")
-        elif chart_type == "원그래프":
-            df[selected_column].value_counts().plot(ax=ax, kind="pie", autopct="%1.1f%%")
+            if chart_type == "막대그래프":
+                df[selected_columns].plot(ax=ax, kind="bar")
+            elif chart_type == "선그래프":
+                df[selected_columns].plot(ax=ax, kind="line")
+            elif chart_type == "원그래프":
+                if len(selected_columns) == 1:
+                    df[selected_columns[0]].value_counts().plot(ax=ax, kind="pie", autopct="%1.1f%%")
+                else:
+                    df[selected_columns].sum().plot(ax=ax, kind="pie", autopct="%1.1f%%")
 
-        ax.set_ylabel(selected_column)
-        st.pyplot(fig)
-        st.info("💡 이 그래프는 건의문 개요의 **'중간 - 문제 상황과 해결 방안'** 칸에서 근거 자료로 활용하세요!")
+            if chart_type != "원그래프":
+                ax.set_ylabel(", ".join(selected_columns))
+            st.pyplot(fig)
+            st.info("💡 이 그래프는 건의문 개요의 **'중간 - 문제 상황과 해결 방안'** 칸에서 근거 자료로 활용하세요!")
+        else:
+            st.warning("그래프로 표시할 항목을 하나 이상 선택해 주세요.")
     else:
         st.warning("숫자로 된 데이터가 없어서 그래프를 그릴 수 없어요.")
 else:
