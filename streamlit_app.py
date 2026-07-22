@@ -10,9 +10,9 @@ st.title("건의문 자료 검증·시각화 도우미")
 # 데이터 만드는 방법 안내 (접었다 펼 수 있는 상자)
 with st.expander("📋 어떤 데이터를 준비해야 하나요? (누르면 펼쳐져요)"):
     st.markdown("""
-    ### 1. 데이터 입력: 스프레드시트 복사·붙여넣기
+    ### 1. 데이터 입력: 붙여넣기 또는 업로드
 
-    스프레드시트에서 복사한 데이터를 아래 붙여넣기 칸에 넣어 주세요. 열 헤더가 포함되어야 합니다.
+    스프레드시트에서 복사한 데이터를 붙여넣거나, CSV/Excel 파일을 업로드해서 데이터를 입력할 수 있어요.
 
     ### 2. 데이터 종류에 따라 양식이 달라요
 
@@ -52,13 +52,24 @@ with col2:
 with col3:
     st.markdown("[학교알리미](https://www.schoolinfo.go.kr)")
 
-# 2단계: 자료 붙여넣기 및 시각화
-pasted_data = st.text_area(
-    "관련 데이터 붙여넣기",
-    placeholder="스프레드시트에서 복사한 데이터를 여기에 붙여넣어 주세요. 열 헤더가 포함되어야 합니다."
-)
+# 2단계: 자료 입력 및 시각화
+tab1, tab2 = st.tabs(["데이터 붙여넣기", "CSV/Excel 업로드"])
+
+with tab1:
+    pasted_data = st.text_area(
+        "관련 데이터 붙여넣기",
+        placeholder="스프레드시트에서 복사한 데이터를 여기에 붙여넣어 주세요. 열 헤더가 포함되어야 합니다."
+    )
+
+with tab2:
+    uploaded_file = st.file_uploader(
+        "CSV 또는 Excel 파일 업로드",
+        type=["csv", "xlsx"]
+    )
+
 
 df = None
+parse_error = None
 if pasted_data:
     try:
         df = pd.read_csv(io.StringIO(pasted_data), sep=None, engine='python')
@@ -66,8 +77,25 @@ if pasted_data:
         try:
             df = pd.read_csv(io.StringIO(pasted_data))
         except Exception:
-            st.error("데이터를 읽는 데 실패했습니다. 스프레드시트에서 복사한 내용을 다시 확인해 주세요.")
+            parse_error = "데이터를 읽는 데 실패했습니다. 스프레드시트에서 복사한 내용을 다시 확인해 주세요."
             df = None
+elif uploaded_file is not None:
+    try:
+        if uploaded_file.name.lower().endswith(".csv"):
+            encodings = ["utf-8", "cp949", "euc-kr"]
+            for enc in encodings:
+                try:
+                    uploaded_file.seek(0)
+                    df = pd.read_csv(uploaded_file, encoding=enc)
+                    break
+                except Exception:
+                    continue
+            if df is None:
+                parse_error = "CSV 파일을 읽는 데 실패했습니다. 다른 인코딩 형식인지 확인해 주세요."
+        else:
+            df = pd.read_excel(uploaded_file)
+    except Exception:
+        parse_error = "파일을 읽는 데 실패했습니다. 업로드한 파일을 확인해 주세요."
 
 if df is not None:
     st.dataframe(df)
@@ -118,8 +146,10 @@ if df is not None:
     else:
         st.warning("숫자로 된 데이터가 없어서 그래프를 그릴 수 없어요.")
 else:
-    if pasted_data:
-        st.error("데이터를 확인할 수 없어요. 붙여넣은 내용을 다시 확인해 주세요.")
+    if parse_error:
+        st.error(parse_error)
+    elif pasted_data or uploaded_file is not None:
+        st.error("데이터를 확인할 수 없어요. 입력한 내용을 다시 확인해 주세요.")
 
 # 3단계: 건의문 개요 틀
 st.subheader("건의문 개요 작성")
