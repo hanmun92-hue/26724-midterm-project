@@ -90,7 +90,9 @@ parse_error = None
 uploaded_file = st.session_state.get("uploaded_file")
 pasted_data = st.session_state.get("pasted_data")
 source = None
-if uploaded_file is not None:
+mode = st.session_state.data_input_mode  # 최근에 사용한 탭 확인
+
+if mode == "upload" and uploaded_file is not None:
     source = "업로드"
     try:
         if uploaded_file.name.lower().endswith(".csv"):
@@ -106,17 +108,17 @@ if uploaded_file is not None:
                 parse_error = "CSV 파일을 읽는 데 실패했습니다. 다른 인코딩 형식인지 확인해 주세요."
         else:
             df = pd.read_excel(uploaded_file)
-    except Exception:
-        parse_error = "파일을 읽는 데 실패했습니다. 업로드한 파일을 확인해 주세요."
-elif pasted_data:
+    except Exception as e:
+        parse_error = f"파일을 읽는 데 실패했습니다: {e}"
+elif mode == "paste" and pasted_data:
     source = "붙여넣기"
     try:
         df = pd.read_csv(io.StringIO(pasted_data), sep=None, engine='python')
     except Exception:
         try:
             df = pd.read_csv(io.StringIO(pasted_data))
-        except Exception:
-            parse_error = "데이터를 읽는 데 실패했습니다. 스프레드시트에서 복사한 내용을 다시 확인해 주세요."
+        except Exception as e:
+            parse_error = f"데이터를 읽는 데 실패했습니다: {e}"
             df = None
 
 if df is not None:
