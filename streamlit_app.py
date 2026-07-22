@@ -87,9 +87,9 @@ with tab2:
 
 df = None
 parse_error = None
-current_mode = st.session_state.data_input_mode
-if current_mode == "upload" and st.session_state.get("uploaded_file") is not None:
-    uploaded_file = st.session_state.uploaded_file
+uploaded_file = st.session_state.get("uploaded_file")
+pasted_data = st.session_state.get("pasted_data")
+if uploaded_file is not None:
     try:
         if uploaded_file.name.lower().endswith(".csv"):
             encodings = ["utf-8", "cp949", "euc-kr"]
@@ -106,8 +106,7 @@ if current_mode == "upload" and st.session_state.get("uploaded_file") is not Non
             df = pd.read_excel(uploaded_file)
     except Exception:
         parse_error = "파일을 읽는 데 실패했습니다. 업로드한 파일을 확인해 주세요."
-elif current_mode == "paste" and st.session_state.get("pasted_data"):
-    pasted_data = st.session_state.pasted_data
+elif pasted_data:
     try:
         df = pd.read_csv(io.StringIO(pasted_data), sep=None, engine='python')
     except Exception:
