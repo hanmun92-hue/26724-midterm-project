@@ -1,3 +1,4 @@
+import io
 import re
 import streamlit as st
 import pandas as pd
@@ -51,19 +52,20 @@ with col2:
 with col3:
     st.markdown("[학교알리미](https://www.schoolinfo.go.kr)")
 
-# 2단계: 자료 업로드 및 시각화
-uploaded = st.file_uploader("관련 데이터(csv) 업로드", type="csv")
-if uploaded:
-    # 여러 인코딩 방식을 순서대로 시도
-    encodings = ["utf-8", "cp949", "euc-kr"]
-    df = None
-    for enc in encodings:
+# 2단계: 자료 붙여넣기 및 시각화
+pasted_data = st.text_area(
+    "관련 데이터 붙여넣기",
+    placeholder="스프레드시트에서 복사한 데이터를 여기에 붙여넣어 주세요. 열 헤더가 포함되어야 합니다."
+)
+if pasted_data:
+    try:
+        df = pd.read_csv(io.StringIO(pasted_data), sep=None, engine='python')
+    except Exception:
         try:
-            uploaded.seek(0)  # 파일 읽기 위치를 처음으로 되돌리기
-            df = pd.read_csv(uploaded, encoding=enc)
-            break  # 성공하면 반복 멈추기
+            df = pd.read_csv(io.StringIO(pasted_data))
         except Exception:
-            continue  # 실패하면 다음 인코딩으로 시도
+            st.error("데이터를 읽는 데 실패했습니다. 스프레드시트에서 복사한 내용을 다시 확인해 주세요.")
+            df = None
 
     if df is not None:
         st.dataframe(df)
