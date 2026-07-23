@@ -1,8 +1,23 @@
 import io
 import re
+import os
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+
+# 한글 폰트 설정
+font_path = os.path.join(os.path.dirname(__file__), 'font', 'NanumGothic-Regular.ttf')
+font_prop = fm.FontProperties(fname=font_path)
+plt.rcParams['font.sans-serif'] = ['NanumGothic']
+plt.rcParams['axes.unicode_minus'] = False
+
+# 폰트 파일이 존재하면 폰트 매니저에 등록
+if os.path.exists(font_path):
+    fm.fontManager.addfont(font_path)
+    bold_font_path = os.path.join(os.path.dirname(__file__), 'font', 'NanumGothic-Bold.ttf')
+    if os.path.exists(bold_font_path):
+        fm.fontManager.addfont(bold_font_path)
 
 
 def set_input_mode_paste():
@@ -244,11 +259,25 @@ if df is not None:
                         ax.barh(proportions.index.astype(str), proportions[col_name], left=left, label=col_name)
                         left += proportions[col_name]
                     ax.set_xlim(0, 100)
-                    ax.set_xlabel("비율 (%)")
+                    ax.set_xlabel("비율 (%)", fontproperties=font_prop)
                     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=2)
 
                 if chart_type not in ["원그래프", "띠그래프"]:
-                    ax.set_ylabel(", ".join(selected_columns))
+                    ax.set_ylabel(", ".join(selected_columns), fontproperties=font_prop)
+                
+                # 모든 텍스트 요소에 한글 폰트 적용
+                ax.set_title(ax.get_title(), fontproperties=font_prop)
+                ax.set_xlabel(ax.get_xlabel(), fontproperties=font_prop)
+                ax.set_ylabel(ax.get_ylabel(), fontproperties=font_prop)
+                
+                # legend에 폰트 적용
+                if ax.get_legend():
+                    for text in ax.get_legend().get_texts():
+                        text.set_fontproperties(font_prop)
+                
+                # tick labels에 폰트 적용
+                for label in ax.get_xticklabels() + ax.get_yticklabels():
+                    label.set_fontproperties(font_prop)
                 st.pyplot(fig)
 
                 # 그래프를 이미지 파일로 다운로드할 수 있게 만들기
