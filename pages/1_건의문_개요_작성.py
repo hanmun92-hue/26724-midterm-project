@@ -18,3 +18,16 @@ st.text_area(
 )
 st.text_input("끝 - 요약 및 강조", key="outline_end")
 
+
+st.subheader("내가 쓴 건의문, 이렇게 점검해보세요")
+col_a, col_b = st.columns(2)
+with col_a:
+    st.markdown("**타당성**")
+    st.checkbox("공정성 — 내 생각에 치우치지 않고 근거를 다뤘나요?", key="check_fair")
+    st.checkbox("실현 가능성 — 건의 내용이 현실적으로 가능한가요?", key="check_feasible")
+    st.checkbox("논리적 설득력 — 근거와 주장이 논리적으로 연결되나요?", key="check_logic")
+with col_b:
+    st.markdown("**표현**")
+    st.checkbox("간결성 — 표현이 구체적이고 간결한가요?", key="check_concise")
+    st.checkbox("명료성 — 명확한 표현을 사용했나요?", key="check_clear")
+    st.checkbox("정중성 — 건의 대상에 맞는 예의를 지켰나요?", key="check_polite")
