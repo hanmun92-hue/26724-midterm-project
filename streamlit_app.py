@@ -67,6 +67,7 @@ problem = st.text_area(
     "어떤 문제 상황을 건의하고 싶나요?",
     value=st.session_state.get("problem_example", "")
 )
+st.session_state["problem_saved"] = problem
 
 # 참고할 수 있는 공식 데이터 출처 안내
 st.subheader("🔗 이런 곳에서 자료를 찾아볼 수 있어요")
@@ -158,6 +159,7 @@ if df is not None:
                 key="selected_columns"
             )
 
+        # 그룹 순서를 직접 정하는 기능 (그룹 기준을 선택했을 때만 표시)
         custom_order = None
         if group_column != "전체 데이터 그대로 보기":
             unique_values = df[group_column].dropna().unique().tolist()
@@ -169,39 +171,41 @@ if df is not None:
                     default=unique_values,
                     key="custom_order"
                 )
-                
-            # 그룹으로 묶을 때는 어떻게 계산할지도 선택
-            agg_method = "평균"
-            if group_column != "전체 데이터 그대로 보기":
-                agg_method = st.radio(
-                    "어떻게 계산할까요?",
-                    ["평균", "합계", "개수"],
-                    horizontal=True,
-                    key="agg_method"
-                )
 
-            chart_type = st.selectbox(
-                "그래프 종류를 선택하세요",
-                ["막대그래프", "꺾은선그래프", "원그래프", "띠그래프"],
-                key="chart_type"
+        # 그룹으로 묶을 때는 어떻게 계산할지도 선택 (group_column과 같은 레벨)
+        agg_method = "평균"
+        if group_column != "전체 데이터 그대로 보기":
+            agg_method = st.radio(
+                "어떻게 계산할까요?",
+                ["평균", "합계", "개수"],
+                horizontal=True,
+                key="agg_method"
             )
 
-            # 그래프 종류별 설명 (선택하면 바로 아래에 안내가 떠요)
-            chart_explanations = {
-                "막대그래프": "📊 **막대그래프**: 여러 항목의 크기를 막대 길이로 비교할 때 좋아요. (예: 성별에 따른 평균 점수 비교)",
-                "꺾은선그래프": "📈 **꺾은선그래프**: 시간에 따라 값이 어떻게 변하는지 보여줄 때 좋아요. (예: 연도별 인구 변화)",
-                "원그래프": "🥧 **원그래프**: 전체에서 각 항목이 차지하는 비율(%)을 한눈에 보여줄 때 좋아요. (예: 우리 반 설문에서 스트레스 원인별 비율)",
-                "띠그래프": "▬ **띠그래프**: 전체를 100%로 놓고 각 항목의 비율을 비교할 때 좋아요. 여러 그룹(예: 우리 학교 vs 전국 평균)을 나란히 놓고 비교하기에도 좋아요.",
-            }
-            st.caption(chart_explanations[chart_type])
-            if chart_type == "꺾은선그래프" and group_column != "전체 데이터 그대로 보기":
-                unique_count = df[group_column].nunique()
-                if unique_count <= 10:
-                    st.warning(
-                        f"⚠️ '{group_column}'은(는) 순서가 없는 항목({unique_count}개)으로 보여요. "
-                        "꺾은선그래프는 시간처럼 순서가 있는 데이터에 적합해요. "
-                        "그룹을 비교할 때는 **막대그래프**를 추천해요!"
-                    )
+        chart_type = st.selectbox(
+            "그래프 종류를 선택하세요",
+            ["막대그래프", "꺾은선그래프", "원그래프", "띠그래프"],
+            key="chart_type"
+        )
+
+        # 그래프 종류별 설명 (선택하면 바로 아래에 안내가 떠요)
+        chart_explanations = {
+            "막대그래프": "📊 **막대그래프**: 여러 항목의 크기를 막대 길이로 비교할 때 좋아요. (예: 성별에 따른 평균 점수 비교)",
+            "꺾은선그래프": "📈 **꺾은선그래프**: 시간에 따라 값이 어떻게 변하는지 보여줄 때 좋아요. (예: 연도별 인구 변화)",
+            "원그래프": "🥧 **원그래프**: 전체에서 각 항목이 차지하는 비율(%)을 한눈에 보여줄 때 좋아요. (예: 우리 반 설문에서 스트레스 원인별 비율)",
+            "띠그래프": "▬ **띠그래프**: 전체를 100%로 놓고 각 항목의 비율을 비교할 때 좋아요. 여러 그룹(예: 우리 학교 vs 전국 평균)을 나란히 놓고 비교하기에도 좋아요.",
+        }
+        st.caption(chart_explanations[chart_type])
+
+        if chart_type == "꺾은선그래프" and group_column != "전체 데이터 그대로 보기":
+            unique_count = df[group_column].nunique()
+            if unique_count <= 10:
+                st.warning(
+                    f"⚠️ '{group_column}'의 순서가 지금은 의미 없이 나열되어 있어요({unique_count}개 항목). "
+                    "만약 이 항목에 '학력처럼 자연스러운 순서'가 있다면 위 '순서를 직접 정하고 싶다면' 상자에서 "
+                    "순서를 정해주세요. 성별처럼 순서가 없다면 **막대그래프**를 추천해요!"
+                )
+
         if selected_columns:
             try:
                 # 그룹 기준이 있으면 평균/합계/개수로 요약, 없으면 원본 그대로 사용
@@ -246,7 +250,6 @@ if df is not None:
                 if chart_type not in ["원그래프", "띠그래프"]:
                     ax.set_ylabel(", ".join(selected_columns))
                 st.pyplot(fig)
-                st.info("💡 이 그래프는 건의문 개요의 **'중간 - 문제 상황과 해결 방안'** 칸에서 근거 자료로 활용하세요!")
 
                 # 그래프를 이미지 파일로 다운로드할 수 있게 만들기
                 img_buffer = io.BytesIO()
@@ -258,6 +261,10 @@ if df is not None:
                     file_name=f"{chart_type}_그래프.png",
                     mime="image/png"
                 )
+
+                # 다음 페이지(건의문 개요 작성)에서도 이 그래프를 볼 수 있도록 저장
+                st.session_state["graph_image"] = img_buffer.getvalue()
+                st.session_state["chart_type_used"] = chart_type
 
                 st.subheader("자료 검증하기 (타당성·신뢰성 평가)")
                 col_a, col_b = st.columns(2)
@@ -271,6 +278,9 @@ if df is not None:
                     st.checkbox("간결성 — 표현이 구체적이고 간결한가요?", key="check_concise")
                     st.checkbox("명료성 — 명확한 표현을 사용했나요?", key="check_clear")
                     st.checkbox("정중성 — 건의 대상에 맞는 예의를 지켰나요?", key="check_polite")
+
+                st.success("✅ 그래프 확인과 자료 검증이 끝났다면, 왼쪽 사이드바에서 **'건의문 개요 작성'** 페이지로 이동해 글을 써 보세요!")
+
             except Exception as e:
                 st.error(f"그래프를 그리는 중 문제가 발생했어요: {e}")
         else:
@@ -282,12 +292,3 @@ else:
         st.error(parse_error)
     elif pasted_data or uploaded_file is not None:
         st.error("데이터를 확인할 수 없어요. 입력한 내용을 다시 확인해 주세요.")
-
-# 3단계: 건의문 개요 틀
-st.subheader("건의문 개요 작성")
-st.text_input("처음 - 건의 동기와 배경")
-st.text_area(
-    "중간 - 문제 상황과 해결 방안",
-    placeholder="예) 위 그래프에서 확인한 것처럼 ○○ 항목이 가장 높게(또는 낮게) 나타났습니다. 이는 △△ 때문으로 보이며, 이를 해결하기 위해 □□를 제안합니다."
-)
-st.text_input("끝 - 요약 및 강조")
