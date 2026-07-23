@@ -182,7 +182,14 @@ if df is not None:
             "띠그래프": "▬ **띠그래프**: 전체를 100%로 놓고 각 항목의 비율을 비교할 때 좋아요. 여러 그룹(예: 우리 학교 vs 전국 평균)을 나란히 놓고 비교하기에도 좋아요.",
         }
         st.caption(chart_explanations[chart_type])
-
+        if chart_type == "꺾은선그래프" and group_column != "전체 데이터 그대로 보기":
+            unique_count = df[group_column].nunique()
+            if unique_count <= 10:
+                st.warning(
+                    f"⚠️ '{group_column}'은(는) 순서가 없는 항목({unique_count}개)으로 보여요. "
+                    "꺾은선그래프는 시간처럼 순서가 있는 데이터에 적합해요. "
+                    "그룹을 비교할 때는 **막대그래프**를 추천해요!"
+                )
         if selected_columns:
             try:
                 # 그룹 기준이 있으면 평균/합계/개수로 요약, 없으면 원본 그대로 사용
