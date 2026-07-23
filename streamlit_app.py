@@ -248,6 +248,17 @@ if df is not None:
                 st.pyplot(fig)
                 st.info("💡 이 그래프는 건의문 개요의 **'중간 - 문제 상황과 해결 방안'** 칸에서 근거 자료로 활용하세요!")
 
+                # 그래프를 이미지 파일로 다운로드할 수 있게 만들기
+                img_buffer = io.BytesIO()
+                fig.savefig(img_buffer, format="png", dpi=200, bbox_inches="tight")
+                img_buffer.seek(0)
+                st.download_button(
+                    label="📥 이 그래프를 이미지 파일로 저장하기",
+                    data=img_buffer,
+                    file_name=f"{chart_type}_그래프.png",
+                    mime="image/png"
+                )
+
                 st.subheader("자료 검증하기 (타당성·신뢰성 평가)")
                 col_a, col_b = st.columns(2)
                 with col_a:
