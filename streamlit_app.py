@@ -208,6 +208,9 @@ if df is not None:
                 if group_column != "전체 데이터 그대로 보기":
                     agg_map = {"평균": "mean", "합계": "sum", "개수": "count"}
                     plot_df = df.groupby(group_column)[selected_columns].agg(agg_map[agg_method])
+                    # 학생이 지정한 순서가 있으면 그 순서대로 다시 정렬
+                    if custom_order and len(custom_order) == len(plot_df):
+                        plot_df = plot_df.reindex(custom_order)
                 else:
                     plot_df = df[selected_columns]
 
