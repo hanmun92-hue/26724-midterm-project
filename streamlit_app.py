@@ -32,7 +32,10 @@ if "data_input_mode" not in st.session_state:
     st.session_state.data_input_mode = "paste"
 
 
-st.title("건의문 자료 검증·시각화 도우미")
+st.markdown(
+    "<h1 style='color: #2E86AB;'>건의문 자료 검증 및 시각화 도우미</h1>",
+    unsafe_allow_html=True
+)
 
 # 데이터 만드는 방법 안내 (접었다 펼 수 있는 상자)
 with st.expander("📋 어떤 데이터를 준비해야 하나요? (누르면 펼쳐져요)"):
