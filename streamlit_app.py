@@ -158,38 +158,50 @@ if df is not None:
                 key="selected_columns"
             )
 
-        # 그룹으로 묶을 때는 어떻게 계산할지도 선택
-        agg_method = "평균"
+        custom_order = None
         if group_column != "전체 데이터 그대로 보기":
-            agg_method = st.radio(
-                "어떻게 계산할까요?",
-                ["평균", "합계", "개수"],
-                horizontal=True,
-                key="agg_method"
+            unique_values = df[group_column].dropna().unique().tolist()
+            with st.expander(f"🔢 '{group_column}'의 순서를 직접 정하고 싶다면 (선택 사항)"):
+                st.caption("항목을 순서대로 다시 선택하면 그 순서로 그래프가 그려져요. (예: 학력 낮음 → 높음)")
+                custom_order = st.multiselect(
+                    "원하는 순서대로 다시 선택하세요",
+                    unique_values,
+                    default=unique_values,
+                    key="custom_order"
+                )
+                
+            # 그룹으로 묶을 때는 어떻게 계산할지도 선택
+            agg_method = "평균"
+            if group_column != "전체 데이터 그대로 보기":
+                agg_method = st.radio(
+                    "어떻게 계산할까요?",
+                    ["평균", "합계", "개수"],
+                    horizontal=True,
+                    key="agg_method"
+                )
+
+            chart_type = st.selectbox(
+                "그래프 종류를 선택하세요",
+                ["막대그래프", "꺾은선그래프", "원그래프", "띠그래프"],
+                key="chart_type"
             )
 
-        chart_type = st.selectbox(
-            "그래프 종류를 선택하세요",
-            ["막대그래프", "꺾은선그래프", "원그래프", "띠그래프"],
-            key="chart_type"
-        )
-
-        # 그래프 종류별 설명 (선택하면 바로 아래에 안내가 떠요)
-        chart_explanations = {
-            "막대그래프": "📊 **막대그래프**: 여러 항목의 크기를 막대 길이로 비교할 때 좋아요. (예: 성별에 따른 평균 점수 비교)",
-            "꺾은선그래프": "📈 **꺾은선그래프**: 시간에 따라 값이 어떻게 변하는지 보여줄 때 좋아요. (예: 연도별 인구 변화)",
-            "원그래프": "🥧 **원그래프**: 전체에서 각 항목이 차지하는 비율(%)을 한눈에 보여줄 때 좋아요. (예: 우리 반 설문에서 스트레스 원인별 비율)",
-            "띠그래프": "▬ **띠그래프**: 전체를 100%로 놓고 각 항목의 비율을 비교할 때 좋아요. 여러 그룹(예: 우리 학교 vs 전국 평균)을 나란히 놓고 비교하기에도 좋아요.",
-        }
-        st.caption(chart_explanations[chart_type])
-        if chart_type == "꺾은선그래프" and group_column != "전체 데이터 그대로 보기":
-            unique_count = df[group_column].nunique()
-            if unique_count <= 10:
-                st.warning(
-                    f"⚠️ '{group_column}'은(는) 순서가 없는 항목({unique_count}개)으로 보여요. "
-                    "꺾은선그래프는 시간처럼 순서가 있는 데이터에 적합해요. "
-                    "그룹을 비교할 때는 **막대그래프**를 추천해요!"
-                )
+            # 그래프 종류별 설명 (선택하면 바로 아래에 안내가 떠요)
+            chart_explanations = {
+                "막대그래프": "📊 **막대그래프**: 여러 항목의 크기를 막대 길이로 비교할 때 좋아요. (예: 성별에 따른 평균 점수 비교)",
+                "꺾은선그래프": "📈 **꺾은선그래프**: 시간에 따라 값이 어떻게 변하는지 보여줄 때 좋아요. (예: 연도별 인구 변화)",
+                "원그래프": "🥧 **원그래프**: 전체에서 각 항목이 차지하는 비율(%)을 한눈에 보여줄 때 좋아요. (예: 우리 반 설문에서 스트레스 원인별 비율)",
+                "띠그래프": "▬ **띠그래프**: 전체를 100%로 놓고 각 항목의 비율을 비교할 때 좋아요. 여러 그룹(예: 우리 학교 vs 전국 평균)을 나란히 놓고 비교하기에도 좋아요.",
+            }
+            st.caption(chart_explanations[chart_type])
+            if chart_type == "꺾은선그래프" and group_column != "전체 데이터 그대로 보기":
+                unique_count = df[group_column].nunique()
+                if unique_count <= 10:
+                    st.warning(
+                        f"⚠️ '{group_column}'은(는) 순서가 없는 항목({unique_count}개)으로 보여요. "
+                        "꺾은선그래프는 시간처럼 순서가 있는 데이터에 적합해요. "
+                        "그룹을 비교할 때는 **막대그래프**를 추천해요!"
+                    )
         if selected_columns:
             try:
                 # 그룹 기준이 있으면 평균/합계/개수로 요약, 없으면 원본 그대로 사용
