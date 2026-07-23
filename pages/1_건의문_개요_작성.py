@@ -19,13 +19,12 @@ st.text_area(
 st.text_input("끝 - 요약 및 강조", key="outline_end")
 
 
-st.subheader("내가 쓴 건의문, 이렇게 점검해보세요")
+st.info("📋 **개요, 이렇게 점검해보세요**")
 col_a, col_b = st.columns(2)
-with col_a:
-    st.subheader("개요, 이렇게 점검해보세요")
-st.checkbox("완결성 — 처음(동기)·중간(문제+해결방안)·끝(요약) 세 칸이 모두 채워졌나요?", key="check_complete")
-st.checkbox("근거 연결 — '중간' 칸에서 그래프의 수치를 실제로 언급했나요?", key="check_evidence_linked")
-st.checkbox("실현 가능성 — 내가 제안한 해결 방안이 현실적으로 가능한가요?", key="check_feasible")
-st.checkbox("논리적 연결 — 문제 상황 → 근거 → 해결 방안이 자연스럽게 이어지나요?", key="check_logic")
+with col_a:   
+ st.checkbox("완결성 — 처음(동기)·중간(문제+해결방안)·끝(요약) 세 칸이 모두 채워졌나요?", key="check_complete")
+ st.checkbox("근거 연결 — '중간' 칸에서 그래프의 수치를 실제로 언급했나요?", key="check_evidence_linked")
+ st.checkbox("실현 가능성 — 내가 제안한 해결 방안이 현실적으로 가능한가요?", key="check_feasible")
+ st.checkbox("논리적 연결 — 문제 상황 → 근거 → 해결 방안이 자연스럽게 이어지나요?", key="check_logic")
 
-st.caption("💡 개요를 완성해 실제 건의문 전체를 쓸 때는 표현이 간결하고 예의 바른지도 함께 점검해보세요.")
+ st.caption("💡 개요를 완성해 실제 건의문 전체를 쓸 때는 표현이 간결하고 예의 바른지도 함께 점검해보세요.")
