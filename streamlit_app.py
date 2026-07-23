@@ -266,19 +266,11 @@ if df is not None:
                 st.session_state["graph_image"] = img_buffer.getvalue()
                 st.session_state["chart_type_used"] = chart_type
 
-                st.subheader("자료 검증하기 (타당성·신뢰성 평가)")
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    st.markdown("**타당성**")
-                    st.checkbox("공정성 — 내 생각에 치우치지 않고 근거를 다뤘나요?", key="check_fair")
-                    st.checkbox("실현 가능성 — 건의 내용이 현실적으로 가능한가요?", key="check_feasible")
-                    st.checkbox("논리적 설득력 — 근거와 주장이 논리적으로 연결되나요?", key="check_logic")
-                with col_b:
-                    st.markdown("**표현**")
-                    st.checkbox("간결성 — 표현이 구체적이고 간결한가요?", key="check_concise")
-                    st.checkbox("명료성 — 명확한 표현을 사용했나요?", key="check_clear")
-                    st.checkbox("정중성 — 건의 대상에 맞는 예의를 지켰나요?", key="check_polite")
-
+                st.subheader("자료 검증하기 (이 그래프, 근거로 믿을 만한가요?)")
+                st.checkbox("출처 — 이 자료가 어디서 나온 것인지 알고 있나요? (통계청, 학교알리미 등)", key="check_source")
+                st.checkbox("사실성 — 이 그래프가 데이터를 있는 그대로 보여주나요? (숫자를 빼거나 왜곡하지 않았나요?)", key="check_accurate")
+                st.checkbox("관련성 — 이 그래프가 내가 건의하려는 문제 상황과 직접 관련이 있나요?", key="check_relevant")
+                st.checkbox("최신성 — 너무 오래된 자료는 아닌가요?", key="check_recent")
                 st.success("✅ 그래프 확인과 자료 검증이 끝났다면, 왼쪽 사이드바에서 **'건의문 개요 작성'** 페이지로 이동해 글을 써 보세요!")
 
             except Exception as e:
